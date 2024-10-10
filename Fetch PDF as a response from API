@@ -1,0 +1,41 @@
+/// Here when we get the pdf view from an API so we need to save it and convert it /// 
+
+
+/// Important Libraries
+import 'dart:io';
+import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+
+/// Function API 
+
+  Future<void> fetchAndSavePdf() async {
+    try {
+      isLoading(true);
+
+      // Fetch the PDF from API
+      final response = await http.get(
+        Uri.parse('YOUR API URL'),
+        headers: {
+          'Authorization': 'Bearer YOUR TOKEN',  // Include your bearer token here if needed
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // Save the PDF file locally
+        final directory = await getApplicationDocumentsDirectory();
+        final filePath = '${directory.path}/fetched_pdf.pdf';
+        final file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
+
+        // Set the local path of the saved PDF
+        localPdfPath(filePath);
+      } else {
+        Get.snackbar('Error', 'Failed to fetch PDF');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Error fetching PDF: $e');
+    } finally {
+      isLoading(false);
+    }
+  }
