@@ -67,3 +67,52 @@ class CustomPriceWidget extends StatelessWidget {
   }
 }
 
+
+
+/// Price widget 
+
+  Widget _priceWidget() {
+    return Obx(() {
+      bool isFree = false;
+
+      if (isFree) {
+      return  Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            VText10(
+              "Free",
+              color: Colors.pink,
+              fontWeight: FontWeight.w500,
+              fontSize: 10,
+            ),
+            if (salesPrices > 0)
+              VText10(
+                "₹${100}/min",
+                fontWeight: FontWeight.w400,
+                color: VColors.grey,
+                decoration: TextDecoration.lineThrough,
+              ),
+          ],
+        );
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          VText10(
+            "₹${200}/min",
+            fontWeight: FontWeight.w500,
+          ),
+          if (salesPrice >
+                  firstrice!)
+            VText10(
+              "₹${250}/min",
+              fontWeight: FontWeight.w400,
+              color: VColors.grey,
+              decoration: TextDecoration.lineThrough,
+            ),
+        ],
+      );
+    });
+  }
+
