@@ -1,0 +1,81 @@
+/// Flash line widget button 
+
+import 'package:flutter/material.dart';
+
+class FlashLineWidget extends StatefulWidget {
+  final Widget buttonWidget;
+
+  const FlashLineWidget({super.key, required this.buttonWidget});
+  @override
+  _FlashLineWidgetState createState() =>
+      _FlashLineWidgetState();
+}
+
+class _FlashLineWidgetState
+    extends State<FlashLineWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration:const Duration(milliseconds: 1500), // Adjust duration as needed
+    );
+
+    // Play animation once and stop
+    _controller.forward();
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _controller.stop(); // Stop after one play-through
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        widget.buttonWidget,
+        AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(
+                (_controller.value * 60.w), // Moves the flash line
+                14,
+              ),
+              child: Transform.rotate(
+                angle: -1, // Adjust this angle for different diagonal directions
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 1.h,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(.0),
+                        Colors.white.withOpacity(.8),
+                        Colors.white.withOpacity(.0),
+                      ],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
