@@ -1,0 +1,151 @@
+
+
+/// Video Box that will move over on the screen 
+/// we will use this on the stack widget 
+
+Positioned(
+  left: _manager.boxPosition.value.dx,
+  top: _manager.boxPosition.value.dy,
+  child: GestureDetector(
+    onPanStart: onPanStart,
+    onPanUpdate: onPanUpdate,
+    onPanEnd: onPanEnd,
+    child: FadeInRight(
+        delay: const Duration(milliseconds: 300),
+        child: videoBox()),
+  ),
+)
+
+
+  late AnimationController _animationController;
+  late Animation<Offset> _animation;
+
+  /// When Pan Start
+  void onPanStart(DragStartDetails details) {
+    _animationController.stop();
+  }
+  /// When Pan Update
+  void onPanUpdate(DragUpdateDetails details) {
+    final double horizontalPadding = 10.0.w;
+    final double topPadding = 60.0.h;
+
+    /// screen dimensions
+    double screenWidth = Get.context!.size!.width;
+    double screenHeight =
+        Get.context!.size!.height - IndexManager.to.bottomMargin;
+
+    double newX = _manager.boxPosition.value.dx + details.delta.dx;
+    double newY = _manager.boxPosition.value.dy + details.delta.dy;
+
+    /// set left/right constraints
+    if (newX < horizontalPadding) {
+      newX = horizontalPadding;
+    } else if (newX >
+        screenWidth - _manager.videoBoxSize.width - horizontalPadding) {
+      newX = screenWidth - _manager.videoBoxSize.width - horizontalPadding;
+    }
+
+    /// set top/bottom constraints
+    if (newY < topPadding) {
+      newY = topPadding;
+    } else if (newY > screenHeight - _manager.videoBoxSize.height) {
+      newY = screenHeight - _manager.videoBoxSize.height;
+    }
+
+    _manager.boxPosition.value = Offset(newX, newY);
+  }
+
+  /// When Pan End
+  void onPanEnd(DragEndDetails details) {
+    final double horizontalPadding = 10.0.w;
+    final double topPadding = 60.0.h;
+    final double bottomPadding = 10.0.h;
+
+    /// Screen dimensions
+    double screenWidth = Get.context!.size!.width;
+    double screenHeight =
+        Get.context!.size!.height - IndexManager.to.bottomMargin;
+
+    /// get movement direction
+    double dx = details.velocity.pixelsPerSecond.dx;
+    double dy = details.velocity.pixelsPerSecond.dy;
+    bool movedRight = dx > 0;
+    bool movedDown = dy > 0;
+
+    Offset targetPosition;
+    if (dx.abs() > dy.abs()) {
+      // Horizontal swipe
+      if (movedRight) {
+        targetPosition = Offset(
+            screenWidth - _manager.videoBoxSize.width - horizontalPadding,
+            _manager.boxPosition.value.dy);
+      } else {
+        targetPosition =
+            Offset(horizontalPadding, _manager.boxPosition.value.dy);
+      }
+    } else if (dy.abs() > dx.abs()) {
+      // Vertical swipe
+      if (movedDown) {
+        targetPosition = Offset(_manager.boxPosition.value.dx,
+            screenHeight - _manager.videoBoxSize.height - bottomPadding);
+      } else {
+        targetPosition = Offset(_manager.boxPosition.value.dx, topPadding);
+      }
+    } else {
+      /// when no movement direction snap to the near corner
+      if (_manager.boxPosition.value.dx < screenWidth / 2) {
+        if (_manager.boxPosition.value.dy < screenHeight / 2) {
+          targetPosition = Offset(horizontalPadding, topPadding);
+        } else {
+          targetPosition = Offset(horizontalPadding,
+              screenHeight - _manager.videoBoxSize.height - bottomPadding);
+        }
+      } else {
+        if (_manager.boxPosition.value.dy < screenHeight / 2) {
+          targetPosition = Offset(
+              screenWidth - _manager.videoBoxSize.width - horizontalPadding,
+              topPadding);
+        } else {
+          targetPosition = Offset(
+              screenWidth - _manager.videoBoxSize.width - horizontalPadding,
+              screenHeight - _manager.videoBoxSize.height - bottomPadding);
+        }
+      }
+    }
+
+    /// Check for bounce
+    Offset finalTargetPosition = targetPosition;
+    if (targetPosition.dx < horizontalPadding) {
+      ///  left bounce
+      finalTargetPosition = Offset(horizontalPadding * 2, targetPosition.dy);
+    } else if (targetPosition.dx >
+        screenWidth - _manager.videoBoxSize.width - horizontalPadding) {
+      ///  right bounce
+      finalTargetPosition = Offset(
+          screenWidth - _manager.videoBoxSize.width - horizontalPadding * 2,
+          targetPosition.dy);
+    } else if (targetPosition.dy < topPadding) {
+      ///  top bounce
+      finalTargetPosition = Offset(targetPosition.dx, topPadding * 2);
+    } else if (targetPosition.dy >
+        screenHeight - _manager.videoBoxSize.height - bottomPadding) {
+      ///  bottom bounce
+      finalTargetPosition = Offset(targetPosition.dx,
+          screenHeight - _manager.videoBoxSize.height - bottomPadding * 2);
+    }
+
+    /// Animate to the target position
+    _animation = Tween<Offset>(
+      begin: _manager.boxPosition.value,
+      end: finalTargetPosition,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.elasticOut,
+    ))
+      ..addListener(() {
+        _manager.boxPosition.value = _animation.value;
+      });
+
+    _animationController.reset();
+    _animationController.forward();
+  }
